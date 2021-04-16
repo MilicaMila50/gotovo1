@@ -24,8 +24,10 @@ unsigned int loadCubemap(vector<std::string> faces);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+bool blinn = false;
+
 //lighting
-glm::vec3 lightPos(15.2f, 15.0f, 10.0f);
+glm::vec3 lightPos(5.2f, 5.0f, -2.0f);
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -78,26 +80,35 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // build and compile shaders
     // -------------------------
     Shader shader("resources/shaders/6.1.cubemaps.vs", "resources/shaders/6.1.cubemaps.fs");
     Shader skyboxShader("resources/shaders/6.1.skybox.vs", "resources/shaders/6.1.skybox.fs");
-    //Shader ourShader("resources/shaders/coordinate_sys.vs", "resources/shaders/coordinate_sys.f nullptr);
     Shader shaderM("resources/shaders/10.2.instancing.vs", "resources/shaders/10.2.instancing.fs");
-    //Shader lightingShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs", nullptr);
-    // Shader lightCubeShader("resources/shaders/2.1.light_cube.vs", "resources/shaders/2.1.light_cube.fs", nullptr);
-    //Shader balloonShader("resources/shaders/6.2.cubemaps.vs","resources/shaders/6.2.cubemaps.fs",nullptr);
+
+    Shader shaderS("resources/shaders/2.stencil_testing.vs", "resources/shaders/2.stencil_testing.fs");
+    Shader shaderSingleColor("resources/shaders/2.stencil_testing.vs", "resources/shaders/2.stencil_single_color.fs");
+
+    Shader shaderG("resources/shaders/1.advanced_lighting.vs", "resources/shaders/1.advanced_lighting.fs");
 
     Shader lightingShader("resources/shaders/3.1.materials.vs","resources/shaders/3.1.materials.fs");
     Shader lightCubeShader("resources/shaders/3.1.light_cube.vs", "resources/shaders/3.1.light_cube.fs");
 
     Model planet("resources/objects/earth/Earth 2K.obj");
-    //planet.SetShaderTextureNamePrefi()
     Model satellite("resources/objects/satelit/satellite_obj.obj");
     Model moon("resources/objects/moon/Moon 2K.obj");
     Model raketa("resources/objects/raketa/justigue league flying vehicle.obj");
     Model ship("resources/objects/ship/mother ship.obj");
+
+
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float cubeVertices[] = {
@@ -143,6 +154,51 @@ int main()
             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
             -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
             -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+    //new1
+
+    float vertices[] = {
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
     float skyboxVertices[] = {
             // positions
@@ -202,6 +258,41 @@ int main()
             glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
+    float planeVertices[] = {
+            5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+            -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+            -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+            5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+            -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+            5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+    };
+
+    float planeVerticess[] = {
+            // positions            // normals         // texcoords
+            10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+            10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+            10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+    };
+
+    unsigned int planeeVAO, planeeVBO;
+    glGenVertexArrays(1, &planeeVAO);
+    glGenBuffers(1, &planeeVBO);
+    glBindVertexArray(planeeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVerticess), planeVerticess, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glBindVertexArray(0);
+
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
@@ -232,7 +323,7 @@ int main()
     glGenBuffers(1, &VBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glBindVertexArray(cubeVAO1);
 
@@ -248,10 +339,30 @@ int main()
     glGenVertexArrays(1, &lightCubeVAO);
     glBindVertexArray(lightCubeVAO);
 
+    //new1
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+
+    // plane VAO
+    unsigned int planeVAO, planeVBO;
+    glGenVertexArrays(1, &planeVAO);
+    glGenBuffers(1, &planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
     // load textures
     // -------------
-    unsigned int cubeTexture = loadTexture(FileSystem::getPath("resources/objects/rook/rock.png").c_str());
-
+    unsigned int cubeTexture = loadTexture(FileSystem::getPath("resources/textures/block_solid.png").c_str());
+    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/space.jpg").c_str());
     vector<std::string> faces
             {
                     FileSystem::getPath("resources/textures/sky/right.jpg"),
@@ -268,8 +379,16 @@ int main()
     shader.use();
     shader.setInt("texture1", 0);
 
+    shaderG.use();
+    shaderG.setInt("texture1", 0);
+
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
+
+    shaderS.use();
+    shaderS.setInt("texture1", 0);
+
+    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
     // render loop
     // -----------
@@ -287,41 +406,62 @@ int main()
 
         // render
         // ------
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        /*glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        lightingShader.use();
-        lightingShader.setVec3("light.position", lightPos);
-        lightingShader.setVec3("viewPos", camera.Position);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);*/
 
+
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
+
+    //11.NED
+        shaderG.use();
+        glm::mat4 projectionG = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 viewG = camera.GetViewMatrix();
+        shaderG.setMat4("projection", projectionG);
+        shaderG.setMat4("view", viewG);
+        // set light uniforms
+        shaderG.setVec3("viewPos", camera.Position);
+        shaderG.setVec3("lightPos", lightPos);
+        shaderG.setInt("blinn", blinn);
+        // floor
+        glBindVertexArray(planeeVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+        //KVADRAT NA SREDINI
+        shaderM.use();
+        shaderM.setVec3("light.position", lightPos);
+        shaderM.setVec3("viewPos", camera.Position);
+        //new1
         // light properties
-        glm::vec3 lightColor(1.0f);
-        lightColor.x = sin(glfwGetTime() * 2.0f);
-        lightColor.y = sin(glfwGetTime() * 0.7f);
-        lightColor.z = sin(glfwGetTime() * 1.3f);
-        glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
-        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-        lightingShader.setVec3("light.ambient", ambientColor);
-        lightingShader.setVec3("light.diffuse", diffuseColor);
-        lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+        shaderM.setVec3("light.ambient", 1.0f, 1.0f, 1.0f); // note that all light colors are set at full intensity
+        shaderM.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+        shaderM.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
 
         // material properties
-        lightingShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-        lightingShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-        lightingShader.setVec3("material.specular", 1.0f, 1.0f, 1.0f); // specular lighting doesn't have full effect on this object's material
-        lightingShader.setFloat("material.shininess", 32.0f);
+        shaderM.setVec3("material.ambient", 0.0f, 0.1f, 0.06f);
+        shaderM.setVec3("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
+        shaderM.setVec3("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
+        shaderM.setFloat("material.shininess", 32.0f);
 
-
-
+        //KRAJ ZA KVADRAT
 
 
 
         // draw scene as normal
-        shader.use();
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = camera.GetViewMatrix();
+        // shader.use();
+        // glm::mat4 model = glm::mat4(1.0f);
+        //glm::mat4 view = camera.GetViewMatrix();
+        //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+
+
         //shader.setMat4("model", model);
         //shader.setMat4("view", view);
         // shader.setMat4("projection", projection);
@@ -332,19 +472,22 @@ int main()
         // world transformation
         glm::mat4 model5 = glm::mat4(1.0f);
         lightingShader.setMat4("model", model5);
-
+        // render the cube
+        glBindVertexArray(cubeVAO1);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         //novo
         glBindVertexArray(cubeVAO);
-        for (unsigned int i = 0; i < 10; i++)
+        for (unsigned int i = 2; i < 10; i++)
         {
-            // calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            //float angle = 20.0f * i;
-            // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0, 0, 1));
-            model = glm::rotate(model, (float)glfwGetTime(), cubePositions[i]);
-            shader.setMat4("model", model);
+            lightCubeShader.use();
+            lightCubeShader.setMat4("view", view);
+            lightCubeShader.setMat4("projection", projection);
+            glm::mat4 modelS = glm::mat4(1.0f);
+            modelS = glm::translate(modelS, cubePositions[i]);
+            modelS = glm::rotate(modelS, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+            modelS = glm::scale(modelS, glm::vec3(0.15)); // a smaller cube
+            lightCubeShader.setMat4("model", modelS);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
@@ -356,9 +499,9 @@ int main()
         shaderM.setMat4("projection", projection);
 
         glm::mat4 model1 = glm::mat4(1.0f);
-        model1 = glm::translate(model1, glm::vec3(40.3f, 1.5f, 10.2f));
-        model1 = glm::scale(model1, glm::vec3(1.3f, 1.3f, 1.3f));
-        //model1 = glm::rotate(model1, glm::vec3(0, 1, 0));
+        model1 = glm::translate(model1, glm::vec3(2.3f, 10.5f, -60.2f));
+        model1 = glm::scale(model1, glm::vec3(3.7f, 3.7f, 3.7f));
+        model1 = glm::rotate(model1, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
         shaderM.setMat4("model", model1);
         planet.Draw(shaderM);
 
@@ -368,9 +511,8 @@ int main()
         shaderM.setMat4("view", view);
         shaderM.setMat4("projection", projection);
         glm::mat4 model2 = glm::mat4(1.0f);
-        model2 = glm::translate(model2, glm::vec3(50.3f, 3.5f, 50.2f));
-        model2 = glm::scale(model2, glm::vec3(2.5f, 2.5f, 2.5f));
-        //model1 = glm::rotate(model1, glm::vec3(0, 1, 0));
+        model2 = glm::translate(model2, glm::vec3(83.3f, 7.5f, -25.2f));
+        model2 = glm::scale(model2, glm::vec3(5.0f, 5.0f, 5.0f));
         shaderM.setMat4("model", model2);
         moon.Draw(shaderM);
 
@@ -378,12 +520,11 @@ int main()
         shaderM.use();
         shaderM.setMat4("view", view);
         shaderM.setMat4("projection", projection);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(55.8f,10.35f,10.0f));
-        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3( 0.12f));
-        shaderM.setMat4("model", model);
-        //shaderM.setFloat("time", glfwGetTime());
+        glm::mat4 model6 = glm::mat4(1.0f);
+        model6 = glm::translate(model6, glm::vec3(2.8f,35.35f,-70.0f));
+        model6 = glm::rotate(model6, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+        model6= glm::scale(model6, glm::vec3( 0.40f));
+        shaderM.setMat4("model", model6);
         satellite.Draw(shaderM);
 
 
@@ -392,47 +533,31 @@ int main()
         shaderM.setMat4("view", view);
         shaderM.setMat4("projection", projection);
         glm::mat4 model3 = glm::mat4(1.0f);
-        model3 = glm::translate(model3, glm::vec3(50.8f,8.35f,35.0f));
-        //model3 = glm::rotate(model3, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 0.0f));
-        model3 = glm::scale(model3, glm::vec3( 0.015f));
+        model3 = glm::translate(model3, glm::vec3(50.8f,8.35f,-42.0f));
+        model3 = glm::scale(model3, glm::vec3( 0.025f));
         shaderM.setMat4("model", model3);
-        //shaderM.setFloat("time", glfwGetTime());
         raketa.Draw(shaderM);
 
-        shaderM.use();
-        shaderM.setMat4("view", view);
-        shaderM.setMat4("projection", projection);
-        glm::mat4 model4 = glm::mat4(1.0f);
-        model4 = glm::translate(model4, glm::vec3(55.8f,10.35f,55.0f));
-        // model4 = glm::rotate(model4, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
-        model4 = glm::scale(model4, glm::vec3( 0.02f));
-        shaderM.setMat4("model", model4);
-        //shaderM.setFloat("time", glfwGetTime());
-        ship.Draw(shaderM);
+        /* shaderM.use();
+         shaderM.setMat4("view", view);
+         shaderM.setMat4("projection", projection);
+         glm::mat4 model4 = glm::mat4(1.0f);
+         model4 = glm::translate(model4, glm::vec3(55.8f,10.35f,55.0f));
+         // model4 = glm::rotate(model4, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+         model4 = glm::scale(model4, glm::vec3( 0.02f));
+         shaderM.setMat4("model", model4);
+         //shaderM.setFloat("time", glfwGetTime());
+         ship.Draw(shaderM);*/
 
 
-
-
-
-
-
-        //new
-        // also draw the lamp object
-        lightCubeShader.use();
-        lightCubeShader.setMat4("projection", projection);
-        lightCubeShader.setMat4("view", view);
-        glm::mat4 modelS = glm::mat4(1.0f);
-        modelS = glm::translate(modelS, lightPos);
-        modelS = glm::scale(modelS, glm::vec3(1.5)); // a smaller cube
-        lightCubeShader.setMat4("model", modelS);
-
-        //422 linija prebaceno
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
+
+
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -441,17 +566,67 @@ int main()
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
-        /* ourShader.use();
 
-         // create transformations
-         glm::mat4 view1         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-         glm::mat4 projection1   = glm::mat4(1.0f);
-         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-         view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-         // pass transformation matrices to the shader
-         ourShader.setMat4("projection", projection1); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-         ourShader.setMat4("view", view1);*/
+        //9.NEDELJA
+        // set uniforms
+        shaderSingleColor.use();
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 viewS = camera.GetViewMatrix();
+        glm::mat4 projectionS = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        shaderSingleColor.setMat4("view", viewS);
+        shaderSingleColor.setMat4("projection", projectionS);
 
+        shaderS.use();
+        shaderS.setMat4("view", viewS);
+        shaderS.setMat4("projection", projectionS);
+
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+        // cubes
+        glBindVertexArray(cubeVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -1.0f));
+        //dodala
+        model = glm::scale(model, glm::vec3( 0.14f));
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        shaderS.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        //menjala sa 2 na 1
+        model = glm::translate(model, glm::vec3(1.6f, 1.0f, 0.0f));
+        //dodalaa
+        model = glm::scale(model, glm::vec3( 0.14f));
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        shaderS.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+        shaderSingleColor.use();
+        float scale = 0.17;
+        // cubes
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        //menjala
+        model = glm::translate(model, glm::vec3(1.6f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);
         // render boxes
 
         // render boxes
@@ -605,3 +780,4 @@ unsigned int loadCubemap(vector<std::string> faces)
 
     return textureID;
 }
+
