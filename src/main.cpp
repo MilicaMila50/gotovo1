@@ -246,16 +246,16 @@ int main()
     };
 
     glm::vec3 cubePositions[] = {
-            glm::vec3( 0.0f,  0.0f,  0.0f),
-            glm::vec3( 2.0f,  5.0f, -15.0f),
-            glm::vec3(-1.5f, -2.2f, -2.5f),
-            glm::vec3(-3.8f, -2.0f, -12.3f),
-            glm::vec3( 2.4f, -0.4f, -3.5f),
-            glm::vec3(-1.7f,  3.0f, -7.5f),
-            glm::vec3( 1.3f, -2.0f, -2.5f),
-            glm::vec3( 1.5f,  2.0f, -2.5f),
-            glm::vec3( 1.5f,  0.2f, -1.5f),
-            glm::vec3(-1.3f,  1.0f, -1.5f)
+            glm::vec3( 0.0f,  7.0f,  0.0f),
+            glm::vec3( 2.0f,  8.0f, -15.0f),
+            glm::vec3(-1.5f, 4.2f, -2.5f),
+            glm::vec3(-3.8f, 6.0f, -12.3f),
+            glm::vec3( 2.4f, 8.4f, -3.5f),
+            //glm::vec3(-1.7f,  5.0f, -7.5f),
+            //glm::vec3( 1.3f, -2.0f, -2.5f),
+            //glm::vec3( 1.5f,  2.0f, -2.5f),
+            //glm::vec3( 1.5f,  0.2f, -1.5f),
+            //glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
     float planeVertices[] = {
@@ -415,7 +415,7 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
 
-    //11.NED
+        //11.NED
         shaderG.use();
         glm::mat4 projectionG = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 viewG = camera.GetViewMatrix();
@@ -478,7 +478,7 @@ int main()
 
         //novo
         glBindVertexArray(cubeVAO);
-        for (unsigned int i = 2; i < 10; i++)
+        for (unsigned int i = 0; i < 5; i++)
         {
             lightCubeShader.use();
             lightCubeShader.setMat4("view", view);
@@ -493,13 +493,13 @@ int main()
         }
 
         glBindTexture(GL_TEXTURE_2D, 0);
-        //MODEL
+        //PLANET
         shaderM.use();
         shaderM.setMat4("view", view);
         shaderM.setMat4("projection", projection);
 
         glm::mat4 model1 = glm::mat4(1.0f);
-        model1 = glm::translate(model1, glm::vec3(2.3f, 10.5f, -60.2f));
+        model1 = glm::translate(model1, glm::vec3(2.3f, 35.5f, -60.2f));
         model1 = glm::scale(model1, glm::vec3(3.7f, 3.7f, 3.7f));
         model1 = glm::rotate(model1, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
         shaderM.setMat4("model", model1);
@@ -511,43 +511,43 @@ int main()
         shaderM.setMat4("view", view);
         shaderM.setMat4("projection", projection);
         glm::mat4 model2 = glm::mat4(1.0f);
-        model2 = glm::translate(model2, glm::vec3(83.3f, 7.5f, -25.2f));
+        model2 = glm::translate(model2, glm::vec3(83.3f, 40.5f, -25.2f));
         model2 = glm::scale(model2, glm::vec3(5.0f, 5.0f, 5.0f));
         shaderM.setMat4("model", model2);
         moon.Draw(shaderM);
 
-        //satellite
+        //SATELLITE
         shaderM.use();
         shaderM.setMat4("view", view);
         shaderM.setMat4("projection", projection);
         glm::mat4 model6 = glm::mat4(1.0f);
-        model6 = glm::translate(model6, glm::vec3(2.8f,35.35f,-70.0f));
+        model6 = glm::translate(model6, glm::vec3(4.8f,64.35f,-70.0f));
         model6 = glm::rotate(model6, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
         model6= glm::scale(model6, glm::vec3( 0.40f));
         shaderM.setMat4("model", model6);
         satellite.Draw(shaderM);
 
 
-        //raketa
+        //SHIP
         shaderM.use();
         shaderM.setMat4("view", view);
         shaderM.setMat4("projection", projection);
         glm::mat4 model3 = glm::mat4(1.0f);
-        model3 = glm::translate(model3, glm::vec3(50.8f,8.35f,-42.0f));
+        model3 = glm::translate(model3, glm::vec3(50.8f,35.35f,-30.0f));
         model3 = glm::scale(model3, glm::vec3( 0.025f));
         shaderM.setMat4("model", model3);
         raketa.Draw(shaderM);
 
-        /* shaderM.use();
+        shaderM.use();
          shaderM.setMat4("view", view);
          shaderM.setMat4("projection", projection);
          glm::mat4 model4 = glm::mat4(1.0f);
-         model4 = glm::translate(model4, glm::vec3(55.8f,10.35f,55.0f));
+         model4 = glm::translate(model4, glm::vec3(80.8f,42.35f,-42.0f));
          // model4 = glm::rotate(model4, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
          model4 = glm::scale(model4, glm::vec3( 0.02f));
          shaderM.setMat4("model", model4);
          //shaderM.setFloat("time", glfwGetTime());
-         ship.Draw(shaderM);*/
+         ship.Draw(shaderM);
 
 
         // draw skybox as last
@@ -595,7 +595,7 @@ int main()
         model = glm::mat4(1.0f);
         //menjala sa 2 na 1
         model = glm::translate(model, glm::vec3(1.6f, 1.0f, 0.0f));
-        //dodalaa
+        //dodala
         model = glm::scale(model, glm::vec3( 0.14f));
         model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
         shaderS.setMat4("model", model);
